@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>WinExe</OutputType><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><ApplicationIcon>Resources\MomentumScroll.ico</ApplicationIcon><AssemblyName>MomentumScroll</AssemblyName><PublishSingleFile>true</PublishSingleFile><IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract><SelfContained>true</SelfContained><RuntimeIdentifier>win-x64</RuntimeIdentifier></PropertyGroup>
+  <ItemGroup><ProjectReference Include="..\MomentumScroll.Core\MomentumScroll.Core.csproj" /><Resource Include="Resources\MomentumScroll.ico" /><EmbeddedResource Include="Resources\MomentumScroll.ico" LogicalName="MomentumScroll.App.Resources.MomentumScroll.ico" /></ItemGroup>
+</Project>

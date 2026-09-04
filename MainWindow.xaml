@@ -1,0 +1,140 @@
+<Window x:Class="JeevansWindowsTools.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Jeevan's Windows Tools" Width="920" Height="690" MinWidth="760" MinHeight="560"
+        Background="{StaticResource PageBackground}" WindowStartupLocation="CenterScreen"
+        Icon="Assets/JeevansWindowsTools.ico" FontFamily="Segoe UI" Foreground="{StaticResource TextPrimary}">
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="76"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+
+        <Border Grid.Row="0" BorderBrush="{StaticResource CardBorder}" BorderThickness="0,0,0,1" Padding="28,0">
+            <Grid>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Jeevan's Windows Tools" FontSize="22" FontWeight="SemiBold"/>
+                    <TextBlock Text="Three small Windows upgrades, managed in one place" Foreground="{StaticResource TextSecondary}" Margin="0,3,0,0"/>
+                </StackPanel>
+                <Button HorizontalAlignment="Right" VerticalAlignment="Center" Content="Hide to tray" Click="Hide_Click"/>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="28">
+                <Grid x:Name="DashboardPage">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="#241E48" BorderBrush="#5540B3" BorderThickness="1" CornerRadius="14" Padding="22" Margin="0,0,0,18">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="All tools" FontSize="20" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="MasterStatusText" Text="All enabled tools are active" Foreground="#C9BFFD" Margin="0,5,0,0"/>
+                            </StackPanel>
+                            <ToggleButton x:Name="MasterToggle" Grid.Column="1" Style="{StaticResource SwitchStyle}" VerticalAlignment="Center" Checked="MasterToggle_Changed" Unchecked="MasterToggle_Changed"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="20">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                <Grid><TextBlock Text="↥" FontSize="28" Foreground="#B59CFF"/><ToggleButton x:Name="BlankToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="BlankToggle_Changed" Unchecked="BlankToggle_Changed"/></Grid>
+                                <StackPanel Grid.Row="1" Margin="0,18,0,22">
+                                    <TextBlock Text="Blank Upper" FontSize="19" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Double-click blank space in Explorer to go to the parent folder." Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,7,0,0"/>
+                                    <TextBlock x:Name="BlankStatus" Margin="0,12,0,0" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <Button Grid.Row="2" Content="Open settings" HorizontalAlignment="Stretch" Click="OpenBlank_Click"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Column="2" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="20">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                <Grid><TextBlock Text="≋" FontSize="31" Foreground="#62D7B2"/><ToggleButton x:Name="MomentumToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumToggle_Changed" Unchecked="MomentumToggle_Changed"/></Grid>
+                                <StackPanel Grid.Row="1" Margin="0,18,0,22">
+                                    <TextBlock Text="Momentum Scroll" FontSize="19" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Adds smooth momentum after a quick mouse-wheel flick." Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,7,0,0"/>
+                                    <TextBlock x:Name="MomentumStatus" Margin="0,12,0,0" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <Button Grid.Row="2" Content="Open settings" HorizontalAlignment="Stretch" Click="OpenMomentum_Click"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Column="4" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="20">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                <Grid><TextBlock Text="▣" FontSize="28" Foreground="#61A9FF"/><ToggleButton x:Name="TaskbarToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="TaskbarToggle_Changed" Unchecked="TaskbarToggle_Changed"/></Grid>
+                                <StackPanel Grid.Row="1" Margin="0,18,0,22">
+                                    <TextBlock Text="Taskbar Switcher" FontSize="19" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Scroll at a screen edge to switch desktops or windows." Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,7,0,0"/>
+                                    <TextBlock x:Name="TaskbarStatus" Margin="0,12,0,0" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <Button Grid.Row="2" Content="Open settings" HorizontalAlignment="Stretch" Click="OpenTaskbar_Click"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="20" Margin="0,18,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="30"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel><TextBlock Text="App preferences" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="The unified app replaces the three separate startup entries." Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/></StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="Start with Windows" Margin="0,0,10,0" VerticalAlignment="Center"/><ToggleButton x:Name="StartupToggle" Style="{StaticResource SwitchStyle}" Checked="StartupToggle_Changed" Unchecked="StartupToggle_Changed"/></StackPanel>
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="Start minimized" Margin="0,0,10,0" VerticalAlignment="Center"/><ToggleButton x:Name="MinimizedToggle" Style="{StaticResource SwitchStyle}" Checked="MinimizedToggle_Changed" Unchecked="MinimizedToggle_Changed"/></StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Grid x:Name="BlankSettingsPage" Visibility="Collapsed">
+                    <StackPanel>
+                        <Button Content="←  All tools" HorizontalAlignment="Left" Click="Back_Click" Margin="0,0,0,18"/>
+                        <TextBlock Text="Blank Upper settings" FontSize="28" FontWeight="SemiBold"/>
+                        <TextBlock Text="Explorer navigation behavior" Foreground="{StaticResource TextSecondary}" Margin="0,5,0,22"/>
+                        <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="22">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,22"><StackPanel><TextBlock Text="Enable Blank Upper" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="Double-click blank Explorer space to navigate up." Foreground="{StaticResource TextSecondary}"/></StackPanel><ToggleButton x:Name="BlankDetailToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="BlankDetailToggle_Changed" Unchecked="BlankDetailToggle_Changed"/></Grid>
+                                <Grid><StackPanel><TextBlock Text="Show activation notification" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="Show a tray notification after navigating." Foreground="{StaticResource TextSecondary}"/></StackPanel><ToggleButton x:Name="BlankNotificationToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="BlankNotification_Changed" Unchecked="BlankNotification_Changed"/></Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <Grid x:Name="MomentumSettingsPage" Visibility="Collapsed">
+                    <StackPanel>
+                        <Button Content="←  All tools" HorizontalAlignment="Left" Click="Back_Click" Margin="0,0,0,18"/>
+                        <TextBlock Text="Momentum Scroll settings" FontSize="28" FontWeight="SemiBold"/>
+                        <TextBlock Text="Tune the feel of wheel momentum" Foreground="{StaticResource TextSecondary}" Margin="0,5,0,22"/>
+                        <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="22">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,20"><TextBlock Text="Enable Momentum Scroll" FontSize="17" FontWeight="SemiBold"/><ToggleButton x:Name="MomentumDetailToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumDetailToggle_Changed" Unchecked="MomentumDetailToggle_Changed"/></Grid>
+                                <TextBlock Text="Momentum strength" FontWeight="SemiBold"/><TextBlock x:Name="StrengthValue" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,-18,0,0"/>
+                                <Slider x:Name="StrengthSlider" Minimum="0.25" Maximum="2.5" TickFrequency="0.05" ValueChanged="StrengthSlider_Changed" Margin="0,8,0,18"/>
+                                <TextBlock Text="Friction (higher glides longer)" FontWeight="SemiBold"/><TextBlock x:Name="FrictionValue" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,-18,0,0"/>
+                                <Slider x:Name="FrictionSlider" Minimum="0.85" Maximum="0.995" TickFrequency="0.005" ValueChanged="FrictionSlider_Changed" Margin="0,8,0,22"/>
+                                <Grid Margin="0,0,0,18"><StackPanel><TextBlock Text="Natural scrolling" FontWeight="SemiBold"/><TextBlock Text="Keep the current wheel direction." Foreground="{StaticResource TextSecondary}"/></StackPanel><ToggleButton x:Name="NaturalToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumOption_Changed" Unchecked="MomentumOption_Changed"/></Grid>
+                                <Grid><StackPanel><TextBlock Text="Horizontal scrolling" FontWeight="SemiBold"/><TextBlock Text="Apply momentum to horizontal wheel input." Foreground="{StaticResource TextSecondary}"/></StackPanel><ToggleButton x:Name="HorizontalToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumOption_Changed" Unchecked="MomentumOption_Changed"/></Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <Grid x:Name="TaskbarSettingsPage" Visibility="Collapsed">
+                    <StackPanel>
+                        <Button Content="←  All tools" HorizontalAlignment="Left" Click="Back_Click" Margin="0,0,0,18"/>
+                        <TextBlock Text="Taskbar Switcher settings" FontSize="28" FontWeight="SemiBold"/>
+                        <TextBlock Text="Choose what scrolling at each screen edge does" Foreground="{StaticResource TextSecondary}" Margin="0,5,0,22"/>
+                        <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="22">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,22"><TextBlock Text="Enable Taskbar Switcher" FontSize="17" FontWeight="SemiBold"/><ToggleButton x:Name="TaskbarDetailToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="TaskbarDetailToggle_Changed" Unchecked="TaskbarDetailToggle_Changed"/></Grid>
+                                <Grid Margin="0,0,0,16"><TextBlock Text="Top edge" VerticalAlignment="Center" FontWeight="SemiBold"/><ComboBox x:Name="TopEdgeCombo" HorizontalAlignment="Right" Width="220" SelectionChanged="EdgeCombo_Changed"><ComboBoxItem Content="Nothing" Tag="None"/><ComboBoxItem Content="Virtual desktops" Tag="VirtualDesktops"/><ComboBoxItem Content="Window switcher" Tag="WindowSwitching"/></ComboBox></Grid>
+                                <Grid Margin="0,0,0,16"><TextBlock Text="Bottom edge / taskbar" VerticalAlignment="Center" FontWeight="SemiBold"/><ComboBox x:Name="BottomEdgeCombo" HorizontalAlignment="Right" Width="220" SelectionChanged="EdgeCombo_Changed"><ComboBoxItem Content="Nothing" Tag="None"/><ComboBoxItem Content="Virtual desktops" Tag="VirtualDesktops"/><ComboBoxItem Content="Window switcher" Tag="WindowSwitching"/></ComboBox></Grid>
+                                <Grid><TextBlock Text="Select window with" VerticalAlignment="Center" FontWeight="SemiBold"/><ComboBox x:Name="SelectButtonCombo" HorizontalAlignment="Right" Width="220" SelectionChanged="SelectButtonCombo_Changed"><ComboBoxItem Content="Right mouse button" Tag="Right"/><ComboBoxItem Content="Left mouse button" Tag="Left"/><ComboBoxItem Content="Middle mouse button" Tag="Middle"/></ComboBox></Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Window>
