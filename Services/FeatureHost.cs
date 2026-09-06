@@ -64,9 +64,11 @@ public sealed class FeatureHost : IDisposable
     public void SetMomentumEnabled(bool enabled)
     {
         MomentumSettings.Enabled = enabled;
-        _momentumStore.Save(MomentumSettings);
+        // Change the live state first. A temporary settings-file denial must not
+        // prevent the timer and shared hook from being stopped.
         ApplyMomentumState();
         ApplySharedMouseState();
+        _momentumStore.Save(MomentumSettings);
     }
 
     public void SaveMomentumSettings()
@@ -272,6 +274,12 @@ public static class StartupRegistration
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string ValueName = "JeevansWindowsTools";
+
+    public static bool IsEnabled()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(RunKey, false);
+        return key?.GetValue(ValueName) is string command && !string.IsNullOrWhiteSpace(command);
+    }
 
     public static void SetEnabled(bool enabled)
     {

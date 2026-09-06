@@ -27,12 +27,30 @@ public sealed class UnifiedSettingsStore
         catch { return new(); }
     }
 
-    public void Save(UnifiedSettings value)
+    public bool Save(UnifiedSettings value)
     {
-        var folder = Path.GetDirectoryName(_path)!;
-        Directory.CreateDirectory(folder);
-        var temp = _path + ".tmp";
-        File.WriteAllText(temp, JsonSerializer.Serialize(value, new JsonSerializerOptions { WriteIndented = true }));
-        File.Move(temp, _path, true);
+        string? temp = null;
+        try
+        {
+            var folder = Path.GetDirectoryName(_path)!;
+            Directory.CreateDirectory(folder);
+            temp = Path.Combine(folder, $"settings-{Guid.NewGuid():N}.tmp");
+            File.WriteAllText(temp, JsonSerializer.Serialize(value, new JsonSerializerOptions { WriteIndented = true }));
+            File.Move(temp, _path, true);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Antivirus/endpoint protection may briefly lock the destination.
+            // Keep the current in-memory choice and leave the application running.
+            return false;
+        }
+        finally
+        {
+            if (temp is not null)
+            {
+                try { File.Delete(temp); } catch { }
+            }
+        }
     }
 }

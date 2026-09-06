@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         _settings = _settingsStore.Load();
+        _settings.StartWithWindows = StartupRegistration.IsEnabled();
         _host = new FeatureHost(_settings.MasterEnabled);
         InitializeComponent();
 
