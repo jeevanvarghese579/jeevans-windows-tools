@@ -18,6 +18,7 @@ public sealed class FeatureHost : IDisposable
     private readonly KeyboardInputService _blankKeyboard = new();
     private readonly SettingsStore _momentumStore = new();
     private readonly MomentumController _momentumController;
+    private RawInputMouseMonitor? _momentumRawInput;
     private readonly EdgeSettings _taskbarSettings = new();
     private readonly KeyboardHook _keyboardHook = new();
     private readonly WindowSwitcher _windowSwitcher = new();
@@ -34,6 +35,15 @@ public sealed class FeatureHost : IDisposable
     public EdgeSettings TaskbarSettings => _taskbarSettings;
     public event EventHandler? BlankActivated;
 
+    public bool MomentumIsActive => _momentumController.Engine.IsActive;
+    public double MomentumVelocity => _momentumController.Engine.Velocity;
+    public int MomentumFlickCount => _momentumController.Engine.FlickCount;
+    public int MomentumLastPhysicalDelta => _momentumController.LastPhysicalDelta;
+    public int MomentumLastInjectedDelta => _momentumController.LastInjectedDelta;
+    public string MomentumInjectionStatus => _momentumController.InjectionStatus;
+    public string MomentumLastStopReason => _momentumController.Engine.LastStopReason;
+    public bool MomentumPhysicalMouseDetected => _momentumController.RawInputObserved;
+
     public FeatureHost(bool masterEnabled)
     {
         _masterEnabled = masterEnabled;
@@ -45,6 +55,9 @@ public sealed class FeatureHost : IDisposable
         _mouseHook = new SharedMouseHook(HandleMouseEvent);
         ApplyEffectiveStates();
     }
+
+    public void AttachWindow(nint handle) =>
+        _momentumRawInput ??= new RawInputMouseMonitor(handle, _momentumController.RecordRawMouseWheel);
 
     public void SetMasterEnabled(bool enabled)
     {
@@ -75,6 +88,23 @@ public sealed class FeatureHost : IDisposable
     {
         _momentumController.Apply(MomentumSettings);
         _momentumStore.Save(MomentumSettings);
+    }
+
+    public void RestoreMomentumDefaults()
+    {
+        var defaults = MomentumSettings.Defaults();
+        MomentumSettings.ActivationSensitivity = defaults.ActivationSensitivity;
+        MomentumSettings.MinimumFlickNotches = defaults.MinimumFlickNotches;
+        MomentumSettings.FlickDetectionWindowMs = defaults.FlickDetectionWindowMs;
+        MomentumSettings.MomentumStrength = defaults.MomentumStrength;
+        MomentumSettings.FrictionPerTick = defaults.FrictionPerTick;
+        MomentumSettings.MaximumVelocity = defaults.MaximumVelocity;
+        MomentumSettings.MinimumStopVelocity = defaults.MinimumStopVelocity;
+        MomentumSettings.OppositeDirectionStops = defaults.OppositeDirectionStops;
+        MomentumSettings.SameDirectionBoosts = defaults.SameDirectionBoosts;
+        MomentumSettings.NaturalScrolling = defaults.NaturalScrolling;
+        MomentumSettings.HorizontalScrolling = defaults.HorizontalScrolling;
+        SaveMomentumSettings();
     }
 
     public void SetTaskbarEnabled(bool enabled)
@@ -254,6 +284,7 @@ public sealed class FeatureHost : IDisposable
 
     public void Dispose()
     {
+        _momentumRawInput?.Dispose();
         _mouseHook.Dispose();
         _momentumController.Dispose();
         _keyboardHook.EscapePressed -= OnEscapePressed;

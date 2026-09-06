@@ -15,6 +15,7 @@ public partial class MainWindow : Window
     private readonly FeatureHost _host;
     private readonly Forms.NotifyIcon _tray;
     private readonly System.Drawing.Icon _trayIcon;
+    private readonly System.Windows.Threading.DispatcherTimer _momentumUiTimer;
     private bool _loading = true;
     private bool _exiting;
 
@@ -26,6 +27,14 @@ public partial class MainWindow : Window
         _settings.StartWithWindows = StartupRegistration.IsEnabled();
         _host = new FeatureHost(_settings.MasterEnabled);
         InitializeComponent();
+        SourceInitialized += (_, _) => _host.AttachWindow(new System.Windows.Interop.WindowInteropHelper(this).Handle);
+
+        _momentumUiTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(250)
+        };
+        _momentumUiTimer.Tick += (_, _) => UpdateMomentumDiagnostics();
+        _momentumUiTimer.Start();
 
         _trayIcon = LoadAppIcon();
         _tray = new Forms.NotifyIcon
@@ -71,15 +80,28 @@ public partial class MainWindow : Window
         BlankToggle.IsChecked = BlankDetailToggle.IsChecked = _host.BlankSettings.IsEnabled;
         BlankNotificationToggle.IsChecked = _host.BlankSettings.ShowNotification;
         MomentumToggle.IsChecked = MomentumDetailToggle.IsChecked = _host.MomentumSettings.Enabled;
-        StrengthSlider.Value = _host.MomentumSettings.MomentumStrength;
-        FrictionSlider.Value = _host.MomentumSettings.FrictionPerTick;
-        NaturalToggle.IsChecked = _host.MomentumSettings.NaturalScrolling;
-        HorizontalToggle.IsChecked = _host.MomentumSettings.HorizontalScrolling;
+        LoadMomentumControls();
         TaskbarToggle.IsChecked = TaskbarDetailToggle.IsChecked = _host.TaskbarSettings.IsSwitcherEnabled;
         SelectCombo(TopEdgeCombo, _host.TaskbarSettings.TopEdge.ToString());
         SelectCombo(BottomEdgeCombo, _host.TaskbarSettings.BottomEdge.ToString());
         SelectCombo(SelectButtonCombo, _host.TaskbarSettings.SelectButton.ToString());
         UpdateMomentumLabels();
+        UpdateMomentumDiagnostics();
+    }
+
+    private void LoadMomentumControls()
+    {
+        SensitivitySlider.Value = _host.MomentumSettings.ActivationSensitivity;
+        FlickNotchesSlider.Value = _host.MomentumSettings.MinimumFlickNotches;
+        FlickWindowSlider.Value = _host.MomentumSettings.FlickDetectionWindowMs;
+        StrengthSlider.Value = _host.MomentumSettings.MomentumStrength;
+        FrictionSlider.Value = _host.MomentumSettings.FrictionPerTick;
+        MaximumVelocitySlider.Value = _host.MomentumSettings.MaximumVelocity;
+        MinimumVelocitySlider.Value = _host.MomentumSettings.MinimumStopVelocity;
+        SameDirectionToggle.IsChecked = _host.MomentumSettings.SameDirectionBoosts;
+        OppositeDirectionToggle.IsChecked = _host.MomentumSettings.OppositeDirectionStops;
+        NaturalToggle.IsChecked = _host.MomentumSettings.NaturalScrolling;
+        HorizontalToggle.IsChecked = _host.MomentumSettings.HorizontalScrolling;
     }
 
     private static void SelectCombo(System.Windows.Controls.ComboBox combo, string tag) =>
@@ -143,18 +165,16 @@ public partial class MainWindow : Window
         RefreshStatus();
     }
 
-    private void StrengthSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void MomentumTuning_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_loading) return;
+        _host.MomentumSettings.ActivationSensitivity = (int)Math.Round(SensitivitySlider.Value);
+        _host.MomentumSettings.MinimumFlickNotches = (int)Math.Round(FlickNotchesSlider.Value);
+        _host.MomentumSettings.FlickDetectionWindowMs = (int)Math.Round(FlickWindowSlider.Value);
         _host.MomentumSettings.MomentumStrength = StrengthSlider.Value;
-        _host.SaveMomentumSettings();
-        UpdateMomentumLabels();
-    }
-
-    private void FrictionSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_loading) return;
         _host.MomentumSettings.FrictionPerTick = FrictionSlider.Value;
+        _host.MomentumSettings.MaximumVelocity = MaximumVelocitySlider.Value;
+        _host.MomentumSettings.MinimumStopVelocity = MinimumVelocitySlider.Value;
         _host.SaveMomentumSettings();
         UpdateMomentumLabels();
     }
@@ -162,6 +182,8 @@ public partial class MainWindow : Window
     private void MomentumOption_Changed(object sender, RoutedEventArgs e)
     {
         if (_loading) return;
+        _host.MomentumSettings.SameDirectionBoosts = SameDirectionToggle.IsChecked == true;
+        _host.MomentumSettings.OppositeDirectionStops = OppositeDirectionToggle.IsChecked == true;
         _host.MomentumSettings.NaturalScrolling = NaturalToggle.IsChecked == true;
         _host.MomentumSettings.HorizontalScrolling = HorizontalToggle.IsChecked == true;
         _host.SaveMomentumSettings();
@@ -169,9 +191,56 @@ public partial class MainWindow : Window
 
     private void UpdateMomentumLabels()
     {
-        if (StrengthValue is null || FrictionValue is null) return;
+        if (StrengthValue is null || FrictionValue is null || SensitivityValue is null) return;
+        SensitivityValue.Text = $"{SensitivitySlider.Value:0}";
+        FlickNotchesValue.Text = $"{FlickNotchesSlider.Value:0}";
+        FlickWindowValue.Text = $"{FlickWindowSlider.Value:0} ms";
         StrengthValue.Text = $"{StrengthSlider.Value:0.00}×";
         FrictionValue.Text = $"{FrictionSlider.Value:0.000}";
+        MaximumVelocityValue.Text = $"{MaximumVelocitySlider.Value:0}";
+        MinimumVelocityValue.Text = $"{MinimumVelocitySlider.Value:0}";
+    }
+
+    private void RestoreMomentumDefaults_Click(object sender, RoutedEventArgs e)
+    {
+        _host.RestoreMomentumDefaults();
+        _loading = true;
+        LoadMomentumControls();
+        _loading = false;
+        UpdateMomentumLabels();
+        UpdateMomentumDiagnostics();
+    }
+
+    private void UpdateMomentumDiagnostics()
+    {
+        if (MomentumLiveStatus is null) return;
+        MomentumLiveStatus.Text = _host.MomentumIsActive ? "Momentum active" : "Momentum idle";
+        MomentumLiveStatus.Foreground = new System.Windows.Media.SolidColorBrush(_host.MomentumIsActive
+            ? System.Windows.Media.Color.FromRgb(86, 214, 169)
+            : System.Windows.Media.Color.FromRgb(170, 179, 204));
+        MomentumDiagnosticsText.Text =
+            $"Physical mouse filter: {(_host.MomentumPhysicalMouseDetected ? "Active" : "Waiting for mouse wheel")}\n" +
+            $"Last physical delta: {_host.MomentumLastPhysicalDelta}\n" +
+            $"Flick count: {_host.MomentumFlickCount}\n" +
+            $"Velocity: {_host.MomentumVelocity:0.0} units/s\n" +
+            $"Last injected delta: {_host.MomentumLastInjectedDelta}\n" +
+            $"Injection: {_host.MomentumInjectionStatus}\n" +
+            $"Last stop reason: {_host.MomentumLastStopReason}";
+    }
+
+    private void RestartAsAdministrator_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                Environment.ProcessPath ?? throw new InvalidOperationException("Executable path unavailable"))
+            {
+                UseShellExecute = true,
+                Verb = "runas"
+            });
+            ExitApplication();
+        }
+        catch (System.ComponentModel.Win32Exception) { }
     }
 
     private void TaskbarToggle_Changed(object sender, RoutedEventArgs e) => SetTaskbarEnabled(TaskbarToggle.IsChecked == true);
@@ -254,6 +323,7 @@ public partial class MainWindow : Window
         if (_exiting) return;
         _exiting = true;
         _host.BlankActivated -= OnBlankActivated;
+        _momentumUiTimer.Stop();
         _host.Dispose();
         _tray.Visible = false;
         _tray.ContextMenuStrip?.Dispose();

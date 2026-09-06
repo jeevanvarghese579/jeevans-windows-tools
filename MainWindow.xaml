@@ -52,7 +52,7 @@
                         <Border Grid.Column="2" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="20">
                             <Grid>
                                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                                <Grid><TextBlock Text="≋" FontSize="31" Foreground="#62D7B2"/><ToggleButton x:Name="MomentumToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumToggle_Changed" Unchecked="MomentumToggle_Changed"/></Grid>
+                                <Grid><TextBlock Text="≋" FontSize="31" Foreground="#62D7B2"/><ToggleButton x:Name="MomentumToggle" AutomationProperties.AutomationId="MomentumToggle" AutomationProperties.Name="Enable Momentum Scroll" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumToggle_Changed" Unchecked="MomentumToggle_Changed"/></Grid>
                                 <StackPanel Grid.Row="1" Margin="0,18,0,22">
                                     <TextBlock Text="Momentum Scroll" FontSize="19" FontWeight="SemiBold"/>
                                     <TextBlock Text="Adds smooth momentum after a quick mouse-wheel flick." Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,7,0,0"/>
@@ -102,18 +102,51 @@
 
                 <Grid x:Name="MomentumSettingsPage" Visibility="Collapsed">
                     <StackPanel>
-                        <Button Content="←  All tools" HorizontalAlignment="Left" Click="Back_Click" Margin="0,0,0,18"/>
+                        <Button Content="&lt;-  All tools" HorizontalAlignment="Left" Click="Back_Click" Margin="0,0,0,18"/>
                         <TextBlock Text="Momentum Scroll settings" FontSize="28" FontWeight="SemiBold"/>
-                        <TextBlock Text="Tune the feel of wheel momentum" Foreground="{StaticResource TextSecondary}" Margin="0,5,0,22"/>
+                        <TextBlock Text="The complete controls and physical-mouse behavior from Momentum Scroll V2" Foreground="{StaticResource TextSecondary}" Margin="0,5,0,22"/>
                         <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="22">
                             <StackPanel>
-                                <Grid Margin="0,0,0,20"><TextBlock Text="Enable Momentum Scroll" FontSize="17" FontWeight="SemiBold"/><ToggleButton x:Name="MomentumDetailToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumDetailToggle_Changed" Unchecked="MomentumDetailToggle_Changed"/></Grid>
+                                <Grid Margin="0,0,0,20"><TextBlock Text="Enable Momentum Scroll" FontSize="17" FontWeight="SemiBold"/><ToggleButton x:Name="MomentumDetailToggle" AutomationProperties.AutomationId="MomentumDetailToggle" AutomationProperties.Name="Enable Momentum Scroll" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumDetailToggle_Changed" Unchecked="MomentumDetailToggle_Changed"/></Grid>
+
+                                <TextBlock Text="Activation sensitivity" FontWeight="SemiBold"/><TextBlock x:Name="SensitivityValue" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,-18,0,0"/>
+                                <Slider x:Name="SensitivitySlider" Minimum="1" Maximum="5" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="MomentumTuning_Changed" Margin="0,8,0,18"/>
+
+                                <TextBlock Text="Minimum flick notches" FontWeight="SemiBold"/><TextBlock x:Name="FlickNotchesValue" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,-18,0,0"/>
+                                <Slider x:Name="FlickNotchesSlider" Minimum="1" Maximum="8" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="MomentumTuning_Changed" Margin="0,8,0,18"/>
+
+                                <TextBlock Text="Flick detection window" FontWeight="SemiBold"/><TextBlock x:Name="FlickWindowValue" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,-18,0,0"/>
+                                <Slider x:Name="FlickWindowSlider" Minimum="100" Maximum="800" TickFrequency="25" IsSnapToTickEnabled="True" ValueChanged="MomentumTuning_Changed" Margin="0,8,0,18"/>
+
                                 <TextBlock Text="Momentum strength" FontWeight="SemiBold"/><TextBlock x:Name="StrengthValue" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,-18,0,0"/>
-                                <Slider x:Name="StrengthSlider" Minimum="0.25" Maximum="2.5" TickFrequency="0.05" ValueChanged="StrengthSlider_Changed" Margin="0,8,0,18"/>
+                                <Slider x:Name="StrengthSlider" Minimum="0.25" Maximum="3" TickFrequency="0.05" ValueChanged="MomentumTuning_Changed" Margin="0,8,0,18"/>
+
                                 <TextBlock Text="Friction (higher glides longer)" FontWeight="SemiBold"/><TextBlock x:Name="FrictionValue" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,-18,0,0"/>
-                                <Slider x:Name="FrictionSlider" Minimum="0.85" Maximum="0.995" TickFrequency="0.005" ValueChanged="FrictionSlider_Changed" Margin="0,8,0,22"/>
+                                <Slider x:Name="FrictionSlider" Minimum="0.80" Maximum="0.995" TickFrequency="0.005" ValueChanged="MomentumTuning_Changed" Margin="0,8,0,18"/>
+
+                                <TextBlock Text="Maximum scroll speed" FontWeight="SemiBold"/><TextBlock x:Name="MaximumVelocityValue" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,-18,0,0"/>
+                                <Slider x:Name="MaximumVelocitySlider" Minimum="300" Maximum="5000" TickFrequency="100" ValueChanged="MomentumTuning_Changed" Margin="0,8,0,18"/>
+
+                                <TextBlock Text="Minimum stop velocity" FontWeight="SemiBold"/><TextBlock x:Name="MinimumVelocityValue" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right" Margin="0,-18,0,0"/>
+                                <Slider x:Name="MinimumVelocitySlider" Minimum="5" Maximum="200" TickFrequency="5" ValueChanged="MomentumTuning_Changed" Margin="0,8,0,22"/>
+
+                                <Grid Margin="0,0,0,18"><StackPanel><TextBlock Text="Boost in the same direction" FontWeight="SemiBold"/><TextBlock Text="Additional wheel input makes active momentum faster." Foreground="{StaticResource TextSecondary}"/></StackPanel><ToggleButton x:Name="SameDirectionToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumOption_Changed" Unchecked="MomentumOption_Changed"/></Grid>
+                                <Grid Margin="0,0,0,18"><StackPanel><TextBlock Text="Stop on opposite direction" FontWeight="SemiBold"/><TextBlock Text="Reverse wheel input immediately cancels momentum." Foreground="{StaticResource TextSecondary}"/></StackPanel><ToggleButton x:Name="OppositeDirectionToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumOption_Changed" Unchecked="MomentumOption_Changed"/></Grid>
                                 <Grid Margin="0,0,0,18"><StackPanel><TextBlock Text="Natural scrolling" FontWeight="SemiBold"/><TextBlock Text="Keep the current wheel direction." Foreground="{StaticResource TextSecondary}"/></StackPanel><ToggleButton x:Name="NaturalToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumOption_Changed" Unchecked="MomentumOption_Changed"/></Grid>
-                                <Grid><StackPanel><TextBlock Text="Horizontal scrolling" FontWeight="SemiBold"/><TextBlock Text="Apply momentum to horizontal wheel input." Foreground="{StaticResource TextSecondary}"/></StackPanel><ToggleButton x:Name="HorizontalToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumOption_Changed" Unchecked="MomentumOption_Changed"/></Grid>
+                                <Grid Margin="0,0,0,22"><StackPanel><TextBlock Text="Horizontal scrolling" FontWeight="SemiBold"/><TextBlock Text="Apply horizontal momentum to tilt-wheel input." Foreground="{StaticResource TextSecondary}"/></StackPanel><ToggleButton x:Name="HorizontalToggle" HorizontalAlignment="Right" Style="{StaticResource SwitchStyle}" Checked="MomentumOption_Changed" Unchecked="MomentumOption_Changed"/></Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="12"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <Button Grid.Column="1" Content="Restore defaults" Click="RestoreMomentumDefaults_Click"/>
+                                    <Button Grid.Column="3" Content="Restart as administrator" Click="RestartAsAdministrator_Click" ToolTip="Use momentum scrolling in elevated applications"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="22" Margin="0,18,0,0">
+                            <StackPanel>
+                                <Grid><TextBlock Text="Live status" FontSize="17" FontWeight="SemiBold"/><TextBlock x:Name="MomentumLiveStatus" HorizontalAlignment="Right" FontWeight="SemiBold"/></Grid>
+                                <TextBlock x:Name="MomentumDiagnosticsText" FontFamily="Consolas" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,14,0,0" LineHeight="20"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>

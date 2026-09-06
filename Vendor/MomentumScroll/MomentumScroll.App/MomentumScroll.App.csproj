@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Library</OutputType><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><AssemblyName>MomentumScroll</AssemblyName><EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition></PropertyGroup>
   <ItemGroup><ProjectReference Include="..\MomentumScroll.Core\MomentumScroll.Core.csproj" /><Resource Include="Resources\MomentumScroll.ico" /><EmbeddedResource Include="Resources\MomentumScroll.ico" LogicalName="MomentumScroll.App.Resources.MomentumScroll.ico" /></ItemGroup>
-  <ItemGroup><ApplicationDefinition Remove="App.xaml" /><Page Remove="App.xaml;MainWindow.xaml;SettingsWindow.xaml" /><Compile Remove="App.xaml.cs;MainWindow.xaml.cs;SettingsWindow.xaml.cs;ViewModels\**\*.cs;Services\MouseHookService.cs;Services\RawInputMouseMonitor.cs" /></ItemGroup>
+  <ItemGroup><ApplicationDefinition Remove="App.xaml" /><Page Remove="App.xaml;MainWindow.xaml;SettingsWindow.xaml" /><Compile Remove="App.xaml.cs;MainWindow.xaml.cs;SettingsWindow.xaml.cs;ViewModels\**\*.cs;Services\MouseHookService.cs" /></ItemGroup>
 </Project>

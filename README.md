@@ -3,12 +3,12 @@
 A unified WPF tray application containing:
 
 - **Blank Upper** — double-click blank space in File Explorer to navigate up.
-- **Momentum Scroll** — add momentum to mouse-wheel scrolling.
+- **Momentum Scroll** — add configurable momentum to physical mouse-wheel scrolling while leaving precision-touchpad gestures alone.
 - **Taskbar Switcher** — scroll at the top or bottom screen edge to switch virtual desktops or windows.
 
 The master switch pauses or resumes every tool without changing the three individual enable/disable choices. Each card has its own settings page inside the unified window. Existing Blank Upper, Momentum Scroll, and Taskbar Desktop Switcher preferences are reused.
 
-Version 1.1 shares one global mouse hook across the three tools and only enables the keyboard hook when Window Switching needs it. See [SECURITY.md](SECURITY.md) for a transparent description of the input access.
+Version 1.2 shares one global mouse hook across the three tools and restores Momentum Scroll V2's physical-mouse detection, complete tuning controls, diagnostics, horizontal momentum, defaults, and elevated-app restart. The keyboard hook is enabled only when Window Switching needs it. See [SECURITY.md](SECURITY.md) for a transparent description of the input access.
 
 ## Build and run
 
