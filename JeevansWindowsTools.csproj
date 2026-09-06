@@ -9,9 +9,16 @@
     <AssemblyName>JeevansWindowsTools</AssemblyName>
     <RootNamespace>JeevansWindowsTools</RootNamespace>
     <ApplicationIcon>Assets\JeevansWindowsTools.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <Company>Jeevan Varghese</Company>
+    <Authors>Jeevan Varghese</Authors>
+    <Product>Jeevan's Windows Tools</Product>
+    <Description>Transparent Windows productivity utilities for Explorer, scrolling, and desktop switching.</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>false</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <DefaultItemExcludes>$(DefaultItemExcludes);Taskbar-Windows-Switcher\**;Vendor\**</DefaultItemExcludes>
   </PropertyGroup>
@@ -19,8 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="Vendor\BlankUpper\BlankUpper.csproj" />
     <ProjectReference Include="Vendor\MomentumScroll\MomentumScroll.App\MomentumScroll.App.csproj" />
-    <ProjectReference Include="Vendor\TaskbarDesktopSwitcher\TaskbarDesktopSwitcher.csproj"
-                      AdditionalProperties="SelfContained=true;RuntimeIdentifier=win-x64" />
+    <ProjectReference Include="Vendor\TaskbarDesktopSwitcher\TaskbarDesktopSwitcher.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\JeevansWindowsTools.ico" />

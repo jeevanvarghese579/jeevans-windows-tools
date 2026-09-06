@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interop;
 using JeevansWindowsTools.Models;
 using JeevansWindowsTools.Services;
 using TaskbarDesktopSwitcher;
@@ -37,7 +36,6 @@ public partial class MainWindow : Window
         };
         _tray.DoubleClick += (_, _) => ShowFromTray();
         _host.BlankActivated += OnBlankActivated;
-        SourceInitialized += (_, _) => _host.AttachWindow(new WindowInteropHelper(this).Handle);
         Closing += OnClosing;
         LoadControls();
         _loading = false;

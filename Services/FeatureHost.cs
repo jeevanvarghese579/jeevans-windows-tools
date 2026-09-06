@@ -1,31 +1,33 @@
-using System.Windows.Interop;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using BlankUpper.Models;
 using BlankUpper.Services;
 using Microsoft.Win32;
 using MomentumScroll.App.Services;
 using MomentumScroll.Core;
 using TaskbarDesktopSwitcher;
-using BlankMouseHook = BlankUpper.Services.MouseHookService;
-using MomentumMouseMonitor = MomentumScroll.App.Services.RawInputMouseMonitor;
-using TaskbarMouseHook = TaskbarDesktopSwitcher.MouseHook;
+using CoreMouseButtons = MomentumScroll.Core.MouseButtons;
 
 namespace JeevansWindowsTools.Services;
 
 public sealed class FeatureHost : IDisposable
 {
     private readonly SettingsService _blankStore = new();
-    private readonly BlankMouseHook _blankHook = new(new ExplorerDetectionService(), new KeyboardInputService());
+    private readonly ExplorerDetectionService _blankDetector = new();
+    private readonly KeyboardInputService _blankKeyboard = new();
     private readonly SettingsStore _momentumStore = new();
     private readonly MomentumController _momentumController;
-    private MomentumMouseMonitor? _rawInput;
     private readonly EdgeSettings _taskbarSettings = new();
-    private readonly TaskbarMouseHook _taskbarHook = new();
     private readonly KeyboardHook _keyboardHook = new();
     private readonly WindowSwitcher _windowSwitcher = new();
+    private readonly SharedMouseHook _mouseHook;
     private int _wheelRemainder;
-    private HookMouseButton? _suppressButtonUntilUp;
+    private SharedMouseButton? _suppressButtonUntilUp;
     private bool _masterEnabled;
+    private long _lastBlankClickTick;
+    private long _lastBlankActivationTick;
+    private int _lastBlankX, _lastBlankY, _checkingBlank;
 
     public AppSettings BlankSettings { get; }
     public MomentumSettings MomentumSettings { get; }
@@ -39,14 +41,10 @@ public sealed class FeatureHost : IDisposable
         MomentumSettings = _momentumStore.Load();
         _momentumController = new MomentumController(MomentumSettings);
         _taskbarSettings.Load();
-        _blankHook.Activated += OnBlankActivated;
-        _taskbarHook.WheelScrolled += OnTaskbarWheel;
-        _taskbarHook.MouseButtonChanged += OnTaskbarButton;
-        _keyboardHook.EscapePressed += (_, _) => _windowSwitcher.Cancel();
+        _keyboardHook.EscapePressed += OnEscapePressed;
+        _mouseHook = new SharedMouseHook(HandleMouseEvent);
         ApplyEffectiveStates();
     }
-
-    public void AttachWindow(nint handle) => _rawInput ??= new MomentumMouseMonitor(handle, _momentumController.RecordRawMouseWheel);
 
     public void SetMasterEnabled(bool enabled)
     {
@@ -58,7 +56,7 @@ public sealed class FeatureHost : IDisposable
     {
         BlankSettings.IsEnabled = enabled;
         _blankStore.Save(BlankSettings);
-        _blankHook.SetEnabled(_masterEnabled && enabled);
+        ApplySharedMouseState();
     }
 
     public void SaveBlankSettings() => _blankStore.Save(BlankSettings);
@@ -67,7 +65,8 @@ public sealed class FeatureHost : IDisposable
     {
         MomentumSettings.Enabled = enabled;
         _momentumStore.Save(MomentumSettings);
-        if (_masterEnabled && enabled) _momentumController.Enable(); else _momentumController.Disable();
+        ApplyMomentumState();
+        ApplySharedMouseState();
     }
 
     public void SaveMomentumSettings()
@@ -80,37 +79,112 @@ public sealed class FeatureHost : IDisposable
     {
         _taskbarSettings.SaveEnabled(enabled);
         ApplyTaskbarState();
+        ApplySharedMouseState();
     }
 
-    public void SaveTaskbarEdges(EdgeFunction top, EdgeFunction bottom) => _taskbarSettings.Save(top, bottom);
-    public void SaveTaskbarSelectButton(WindowSwitcherSelectButton button) => _taskbarSettings.SaveWindowSwitcherSelectButton(button);
+    public void SaveTaskbarEdges(EdgeFunction top, EdgeFunction bottom)
+    {
+        _taskbarSettings.Save(top, bottom);
+        ApplyTaskbarState();
+    }
 
-    private void OnBlankActivated(object? sender, EventArgs e) => BlankActivated?.Invoke(this, e);
+    public void SaveTaskbarSelectButton(WindowSwitcherSelectButton button) =>
+        _taskbarSettings.SaveWindowSwitcherSelectButton(button);
+
+    private bool BlankActive => _masterEnabled && BlankSettings.IsEnabled;
+    private bool MomentumActive => _masterEnabled && MomentumSettings.Enabled;
+    private bool TaskbarActive => _masterEnabled && _taskbarSettings.IsSwitcherEnabled;
+    private bool TaskbarNeedsMouse => TaskbarActive &&
+        (_taskbarSettings.TopEdge != EdgeFunction.None || _taskbarSettings.BottomEdge != EdgeFunction.None);
 
     private void ApplyEffectiveStates()
     {
-        _blankHook.SetEnabled(_masterEnabled && BlankSettings.IsEnabled);
-        if (_masterEnabled && MomentumSettings.Enabled) _momentumController.Enable(); else _momentumController.Disable();
+        ApplyMomentumState();
         ApplyTaskbarState();
+        ApplySharedMouseState();
+    }
+
+    private void ApplyMomentumState()
+    {
+        // Mouse input arrives through SharedMouseHook; MomentumController only runs its timer.
+        if (MomentumActive) _momentumController.Enable();
+        else _momentumController.Disable();
     }
 
     private void ApplyTaskbarState()
     {
-        var enabled = _masterEnabled && _taskbarSettings.IsSwitcherEnabled;
-        if (enabled)
-        {
-            _taskbarHook.Start();
-            _keyboardHook.Start();
-        }
+        // Escape is only needed while Ctrl+Alt+Tab window switching is configured.
+        var needsKeyboard = TaskbarActive &&
+            (_taskbarSettings.TopEdge == EdgeFunction.WindowSwitching ||
+             _taskbarSettings.BottomEdge == EdgeFunction.WindowSwitching);
+        if (needsKeyboard) _keyboardHook.Start();
         else
         {
-            _taskbarHook.Stop();
             _keyboardHook.Stop();
             _windowSwitcher.Cancel();
         }
     }
 
-    private void OnTaskbarWheel(object? sender, WheelEventArgs e)
+    private void ApplySharedMouseState()
+    {
+        if (BlankActive || MomentumActive || TaskbarNeedsMouse) _mouseHook.Start();
+        else _mouseHook.Stop();
+    }
+
+    private bool HandleMouseEvent(SharedMouseEvent e)
+    {
+        if (BlankActive && e.Kind == SharedMouseEventKind.ButtonDown && e.Button == SharedMouseButton.Left)
+            ObserveBlankClick(e.X, e.Y);
+
+        var handled = TaskbarNeedsMouse && e.Kind switch
+        {
+            SharedMouseEventKind.Wheel => HandleTaskbarWheel(e.WheelDelta),
+            SharedMouseEventKind.ButtonDown => HandleTaskbarButton(e.Button, true),
+            SharedMouseEventKind.ButtonUp => HandleTaskbarButton(e.Button, false),
+            _ => false
+        };
+
+        if (MomentumActive && !handled)
+        {
+            if (e.Kind is SharedMouseEventKind.Wheel or SharedMouseEventKind.HorizontalWheel)
+                _momentumController.HandlePhysicalWheel(e.WheelDelta, e.Kind == SharedMouseEventKind.HorizontalWheel);
+            else if (TryMapButton(e.Button, out var button))
+                _momentumController.HandleMouseButton(button, e.Kind == SharedMouseEventKind.ButtonDown);
+        }
+        return handled;
+    }
+
+    private void ObserveBlankClick(int x, int y)
+    {
+        var now = Stopwatch.GetTimestamp();
+        var elapsedMs = (now - Interlocked.Read(ref _lastBlankClickTick)) * 1000 / Stopwatch.Frequency;
+        var closeEnough = Math.Abs(x - _lastBlankX) <= NativeMethods.DoubleClickWidth &&
+                          Math.Abs(y - _lastBlankY) <= NativeMethods.DoubleClickHeight;
+        if (elapsedMs <= NativeMethods.DoubleClickTime && closeEnough &&
+            now - Interlocked.Read(ref _lastBlankActivationTick) > Stopwatch.Frequency / 2 &&
+            Interlocked.CompareExchange(ref _checkingBlank, 1, 0) == 0)
+            _ = CheckBlankClickAsync(x, y);
+        _lastBlankX = x;
+        _lastBlankY = y;
+        Interlocked.Exchange(ref _lastBlankClickTick, now);
+    }
+
+    private async Task CheckBlankClickAsync(int x, int y)
+    {
+        try
+        {
+            var blank = await Task.Run(() => BlankActive && _blankDetector.IsConfidentExplorerBlankSpace(x, y)).ConfigureAwait(false);
+            if (!blank || !BlankActive) return;
+            _blankKeyboard.SendAltUp();
+            Interlocked.Exchange(ref _lastBlankActivationTick, Stopwatch.GetTimestamp());
+            Interlocked.Exchange(ref _lastBlankClickTick, 0);
+            BlankActivated?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception ex) { AppLogger.Error("Blank-space detection failed", ex); }
+        finally { Interlocked.Exchange(ref _checkingBlank, 0); }
+    }
+
+    private bool HandleTaskbarWheel(int delta)
     {
         var function = TaskbarHelper.GetCursorEdge(_taskbarSettings.TriggerDistance) switch
         {
@@ -118,11 +192,10 @@ public sealed class FeatureHost : IDisposable
             EdgePosition.Bottom => _taskbarSettings.BottomEdge,
             _ => EdgeFunction.None
         };
-        if (function == EdgeFunction.None) return;
+        if (function == EdgeFunction.None) return false;
 
-        e.Handled = true;
-        if (Math.Sign(e.Delta) != Math.Sign(_wheelRemainder)) _wheelRemainder = 0;
-        _wheelRemainder += e.Delta;
+        if (Math.Sign(delta) != Math.Sign(_wheelRemainder)) _wheelRemainder = 0;
+        _wheelRemainder += delta;
         while (Math.Abs(_wheelRemainder) >= 120)
         {
             var up = _wheelRemainder > 0;
@@ -134,40 +207,64 @@ public sealed class FeatureHost : IDisposable
             }
             else _windowSwitcher.Move(forward: !up);
         }
+        return true;
     }
 
-    private void OnTaskbarButton(object? sender, HookMouseButtonEventArgs e)
+    private bool HandleTaskbarButton(SharedMouseButton button, bool isDown)
     {
-        if (_suppressButtonUntilUp == e.Button && !e.IsDown)
+        if (_suppressButtonUntilUp == button && !isDown)
         {
-            e.Handled = true;
             _suppressButtonUntilUp = null;
-            return;
+            return true;
         }
-        if (!_windowSwitcher.IsActive || !e.IsDown) return;
+        if (!_windowSwitcher.IsActive || !isDown) return false;
         var selectButton = _taskbarSettings.SelectButton switch
         {
-            WindowSwitcherSelectButton.Left => HookMouseButton.Left,
-            WindowSwitcherSelectButton.Middle => HookMouseButton.Middle,
-            _ => HookMouseButton.Right
+            WindowSwitcherSelectButton.Left => SharedMouseButton.Left,
+            WindowSwitcherSelectButton.Middle => SharedMouseButton.Middle,
+            _ => SharedMouseButton.Right
         };
-        if (e.Button == selectButton)
+        if (button == selectButton)
         {
-            _suppressButtonUntilUp = e.Button;
-            e.Handled = true;
+            _suppressButtonUntilUp = button;
             _windowSwitcher.Select();
+            return true;
         }
-        else _windowSwitcher.Cancel();
+        _windowSwitcher.Cancel();
+        return false;
     }
+
+    private static bool TryMapButton(SharedMouseButton value, out CoreMouseButtons button)
+    {
+        button = value switch
+        {
+            SharedMouseButton.Left => CoreMouseButtons.Left,
+            SharedMouseButton.Right => CoreMouseButtons.Right,
+            SharedMouseButton.Middle => CoreMouseButtons.Middle,
+            SharedMouseButton.X1 => CoreMouseButtons.X1,
+            SharedMouseButton.X2 => CoreMouseButtons.X2,
+            _ => CoreMouseButtons.None
+        };
+        return button != CoreMouseButtons.None;
+    }
+
+    private void OnEscapePressed(object? sender, EventArgs e) => _windowSwitcher.Cancel();
 
     public void Dispose()
     {
-        _rawInput?.Dispose();
-        _blankHook.Activated -= OnBlankActivated;
-        _blankHook.Dispose();
+        _mouseHook.Dispose();
         _momentumController.Dispose();
-        _taskbarHook.Dispose();
+        _keyboardHook.EscapePressed -= OnEscapePressed;
         _keyboardHook.Dispose();
+    }
+
+    private static class NativeMethods
+    {
+        public static int DoubleClickWidth => GetSystemMetrics(36);
+        public static int DoubleClickHeight => GetSystemMetrics(37);
+        public static uint DoubleClickTime => GetDoubleClickTime();
+        [DllImport("user32.dll")] private static extern int GetSystemMetrics(int index);
+        [DllImport("user32.dll")] private static extern uint GetDoubleClickTime();
     }
 }
 

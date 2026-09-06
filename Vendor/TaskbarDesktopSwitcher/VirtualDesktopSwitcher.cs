@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using System.IO;
 
 namespace TaskbarDesktopSwitcher
 {
@@ -43,12 +42,11 @@ namespace TaskbarDesktopSwitcher
         {
             try
             {
-                Log("Switching to next desktop");
                 SendKeysCombination(VK_LWIN, VK_LCONTROL, VK_RIGHT);
             }
             catch (Exception ex)
             {
-                Log("Error in SwitchToNextDesktop: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Taskbar Desktop Switcher: " + ex.Message);
             }
         }
 
@@ -56,12 +54,11 @@ namespace TaskbarDesktopSwitcher
         {
             try
             {
-                Log("Switching to previous desktop");
                 SendKeysCombination(VK_LWIN, VK_LCONTROL, VK_LEFT);
             }
             catch (Exception ex)
             {
-                Log("Error in SwitchToPreviousDesktop: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Taskbar Desktop Switcher: " + ex.Message);
             }
         }
 
@@ -82,9 +79,8 @@ namespace TaskbarDesktopSwitcher
             // Release Win
             inputs[5] = CreateKeyboardInput(winKey, true);
 
-            Log("Calling SendInput");
             uint result = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
-            Log("SendInput returned: " + result.ToString());
+            if (result != inputs.Length) System.Diagnostics.Debug.WriteLine($"Taskbar Desktop Switcher: SendInput sent {result}/{inputs.Length}");
         }
 
         private static INPUT CreateKeyboardInput(ushort keyCode, bool keyUp)
@@ -100,14 +96,5 @@ namespace TaskbarDesktopSwitcher
             return input;
         }
 
-        private static void Log(string message)
-        {
-            try
-            {
-                string logPath = Path.Combine(Path.GetTempPath(), "TDS_debug.log");
-                File.AppendAllText(logPath, "[" + DateTime.Now.ToString("HH:mm:ss.fff") + "] " + message + "\n");
-            }
-            catch { }
-        }
     }
 }

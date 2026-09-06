@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>WinExe</OutputType><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><ApplicationIcon>Resources\MomentumScroll.ico</ApplicationIcon><AssemblyName>MomentumScroll</AssemblyName><PublishSingleFile>true</PublishSingleFile><IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract><SelfContained>true</SelfContained><RuntimeIdentifier>win-x64</RuntimeIdentifier></PropertyGroup>
+  <PropertyGroup><OutputType>Library</OutputType><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><AssemblyName>MomentumScroll</AssemblyName><EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition></PropertyGroup>
   <ItemGroup><ProjectReference Include="..\MomentumScroll.Core\MomentumScroll.Core.csproj" /><Resource Include="Resources\MomentumScroll.ico" /><EmbeddedResource Include="Resources\MomentumScroll.ico" LogicalName="MomentumScroll.App.Resources.MomentumScroll.ico" /></ItemGroup>
+  <ItemGroup><ApplicationDefinition Remove="App.xaml" /><Page Remove="App.xaml;MainWindow.xaml;SettingsWindow.xaml" /><Compile Remove="App.xaml.cs;MainWindow.xaml.cs;SettingsWindow.xaml.cs;ViewModels\**\*.cs;Services\MouseHookService.cs;Services\RawInputMouseMonitor.cs" /></ItemGroup>
 </Project>

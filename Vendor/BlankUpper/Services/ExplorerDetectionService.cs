@@ -6,7 +6,7 @@ namespace BlankUpper.Services;
 /// <summary>Conservative UI Automation hit testing for Explorer's folder contents control.</summary>
 public sealed class ExplorerDetectionService
 {
-    internal bool IsConfidentExplorerBlankSpace(NativeMethods.Point point)
+    public bool IsConfidentExplorerBlankSpace(int x, int y)
     {
         try
         {
@@ -14,7 +14,7 @@ public sealed class ExplorerDetectionService
             if (!IsExplorer(foreground)) return false;
 
             // Hook coordinates and UIA screen coordinates are physical pixels under PerMonitorV2 awareness.
-            var element = AutomationElement.FromPoint(new System.Windows.Point(point.X, point.Y));
+            var element = AutomationElement.FromPoint(new System.Windows.Point(x, y));
             if (element is null || IsExcluded(element)) return false;
 
             var hasListSurface = false;
@@ -28,7 +28,7 @@ public sealed class ExplorerDetectionService
             }
             // Some Windows 10 Explorer builds expose the folder view as an unnamed List.
             // A list surface is safe here because file/folder items have already been rejected above.
-            if (!hasListSurface) AppLogger.Info($"Explorer UIA did not expose a folder view at {point.X},{point.Y}: {Describe(element)}");
+            if (!hasListSurface) AppLogger.Info($"Explorer UIA did not expose a folder view at {x},{y}: {Describe(element)}");
             return hasListSurface;
         }
         catch (ElementNotAvailableException) { return false; }
